@@ -15,6 +15,9 @@ Follow the stages in ROADMAP.md one at a time. Don't jump ahead.
   Review my tests afterwards. Don't write the test code for me unless I ask.
 - After each stage, I write at least one feature myself and you review it.
 
+## Design docs
+- Stage 1 (core API): `docs/stage1-design.md`. Read it before working on Stage 1.
+
 ## Project rules
 - Never commit tracker.csv or any personal data. Use a fake sample CSV for examples and tests.
 - Raw SQL, no ORM. I'm learning SQL.

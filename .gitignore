@@ -1,0 +1,20 @@
+# Personal data: never commit
+tracker.csv
+
+# Dependencies
+node_modules/
+
+# Database files (SQLite may also create -journal/-wal/-shm side files)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/

@@ -54,6 +54,12 @@ export const listApplicationsQuerySchema = z.strictObject({
   company: z.string().trim().min(1).optional(),
 });
 
+// Route params like /applications/:id arrive as strings; coerce turns "5" into 5.
+// "abc", "1.5", and "0" fail validation (400) instead of reaching the database.
+export const idParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 // TypeScript types generated from the schemas above
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;

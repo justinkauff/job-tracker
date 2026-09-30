@@ -1,4 +1,6 @@
 import express from "express";
+import { applicationsRouter } from "./applications/applications.routes.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 // Builds the Express app: middleware + routes. No app.listen() here,
 // so tests can import the app without opening a network port.
@@ -11,3 +13,9 @@ app.use(express.json());
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
+
+app.use("/applications", applicationsRouter);
+
+// Order matters: these must come after all the routes
+app.use(notFoundHandler);
+app.use(errorHandler);

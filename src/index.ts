@@ -1,8 +1,9 @@
-// Temporary check for the database setup. Replaced by the real server in build step 3.
-import { db } from "./db/connection.js";
+// Entry point: opens the database, then starts the HTTP server.
+import "./db/connection.js";
+import { app } from "./app.js";
 
-const tables = db
-  .prepare("SELECT type, name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'")
-  .all();
-console.log("Database objects:", tables);
-console.log("foreign_keys =", db.pragma("foreign_keys", { simple: true }));
+const port = Number(process.env.PORT ?? 3000);
+
+app.listen(port, () => {
+  console.log(`Job Tracker API listening on http://localhost:${port}`);
+});

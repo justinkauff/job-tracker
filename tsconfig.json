@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    // Where the source lives and where compiled JavaScript goes
+    "rootDir": "src",
+    "outDir": "dist",
+
+    // Node 24 runs modern JavaScript and ES modules natively
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    // Load Node's built-in types (process, Buffer, etc.)
+    "types": ["node"],
+
+    // Strict type checking: catches null/undefined bugs at compile time
+    "strict": true,
+
+    // Don't type-check library .d.ts files in node_modules (faster builds)
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

@@ -2,6 +2,7 @@ import express from "express";
 import { applicationsRouter } from "./applications/applications.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { contactsRouter } from "./contacts/contacts.routes.js";
+import { importRouter } from "./import/import.routes.js";
 
 // Builds the Express app: middleware + routes. No app.listen() here,
 // so tests can import the app without opening a network port.
@@ -19,6 +20,7 @@ app.get("/health", (req, res) => {
 
 app.use("/applications", applicationsRouter);
 app.use("/", contactsRouter);
+app.use("/", importRouter);
 
 // Order matters: these must come after all the routes
 app.use(notFoundHandler);

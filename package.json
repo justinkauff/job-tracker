@@ -23,6 +23,7 @@
   "homepage": "https://github.com/justinkauff/job-tracker#readme",
   "dependencies": {
     "better-sqlite3": "^13.0.3",
+    "csv-parse": "^7.0.3",
     "express": "^5.2.1",
     "zod": "^4.6.5"
   },

@@ -44,6 +44,26 @@ export function createApplication(input: CreateApplicationInput): Application {
   return db.prepare(sql).get(input) as Application;
 }
 
+// Inserts many applications in one transaction: either all of them are saved or none are
+export function createApplications(inputs: CreateApplicationInput[]): Application[] {
+  const insertAll = db.transaction((rows: CreateApplicationInput[]) =>
+    rows.map((row) => createApplication(row)),
+  );
+  return insertAll(inputs);
+}
+
+// True if an application with this company and role already exists (case-insensitive).
+// A missing role only matches another missing role.
+export function applicationExists(company: string, role: string | null | undefined): boolean {
+  const row = db
+    .prepare(
+      `SELECT 1 FROM applications
+       WHERE lower(company) = lower(?) AND lower(coalesce(role, '')) = lower(?)`,
+    )
+    .get(company, role ?? "");
+  return row !== undefined;
+}
+
 export function listApplications(filters: ListApplicationsQuery): Application[] {
   const conditions: string[] = [];
   const params: Record<string, string> = {};

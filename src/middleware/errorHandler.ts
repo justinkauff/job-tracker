@@ -4,6 +4,9 @@ import { ZodError } from "zod";
 // Thrown by routes when a record doesn't exist. The error handler turns it into a 404.
 export class NotFoundError extends Error {}
 
+// Thrown when a request is unusable for a reason zod doesn't cover (e.g. an unreadable CSV). Becomes a 400.
+export class BadRequestError extends Error {}
+
 // Runs when no route matched the URL (registered after all the routers)
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({ error: `No route for ${req.method} ${req.path}` });
@@ -27,6 +30,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // The body wasn't valid JSON (thrown by express.json())
   if (err.type === "entity.parse.failed") {
     res.status(400).json({ error: "Request body is not valid JSON" });
+    return;
+  }
+
+  if (err instanceof BadRequestError) {
+    res.status(400).json({ error: err.message });
     return;
   }
 

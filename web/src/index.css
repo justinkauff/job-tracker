@@ -140,6 +140,66 @@ button:disabled {
   font-size: 13px;
 }
 
+/* ---------- Contacts (inside the edit dialog) ---------- */
+
+.contacts {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.contacts h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.contacts-empty {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contact {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.contact-main {
+  flex: 1;
+}
+
+.contact-title,
+.contact-statuses,
+.contact-detail {
+  color: var(--muted);
+}
+
+.contact-statuses,
+.contact-detail {
+  font-size: 13px;
+}
+
+.button-danger-quiet {
+  color: var(--danger);
+  border-color: transparent;
+  background: transparent;
+  padding: 2px 8px;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;

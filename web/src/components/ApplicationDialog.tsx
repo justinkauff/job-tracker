@@ -8,11 +8,17 @@ import {
   type ApplicationChanges,
   type ApplicationRow,
   type ApplicationStatus,
+  type Contact,
 } from '../types'
+import { ContactsSection } from './ContactsSection'
 
 interface ApplicationDialogProps {
   // The application to edit, or null to add a new one
   application: Application | null
+  // The live contacts from App's state (not the snapshot inside `application`),
+  // so changes show up here and on the board at the same time
+  contacts: Contact[]
+  onContactsChange: (contacts: Contact[]) => void
   onClose: () => void
   onSaved: (saved: ApplicationRow) => void
   onDeleted: (id: number) => void
@@ -30,7 +36,14 @@ interface FormValues {
   notes: string
 }
 
-export function ApplicationDialog({ application, onClose, onSaved, onDeleted }: ApplicationDialogProps) {
+export function ApplicationDialog({
+  application,
+  contacts,
+  onContactsChange,
+  onClose,
+  onSaved,
+  onDeleted,
+}: ApplicationDialogProps) {
   const isNew = application === null
   const [values, setValues] = useState<FormValues>(() => initialValues(application))
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -140,10 +153,21 @@ export function ApplicationDialog({ application, onClose, onSaved, onDeleted }: 
             Cancel
           </button>
           <button type="submit" className="button-primary" disabled={busy}>
-            {busy ? 'SavingÃ¢â‚¬Â¦' : 'Save'}
+            {busy ? 'Saving…' : 'Save'}
           </button>
         </div>
       </form>
+
+      {/* Outside the <form> on purpose: HTML doesn't allow a form inside a form, and the
+          contacts section gets its own form in step 3. Only when editing, because a new
+          application has no id yet, so it can't have contacts. */}
+      {!isNew && (
+        <ContactsSection
+          applicationId={application.id}
+          contacts={contacts}
+          onChange={onContactsChange}
+        />
+      )}
     </dialog>
   )
 }
@@ -184,7 +208,7 @@ function initialValues(application: Application | null): FormValues {
   }
 }
 
-// Form strings Ã¢â€ â€™ API values. Empty optional fields become null, which clears them on edit.
+// Form strings → API values. Empty optional fields become null, which clears them on edit.
 function toPayload(values: FormValues): ApplicationChanges {
   const orNull = (text: string) => (text.trim() === '' ? null : text.trim())
   return {

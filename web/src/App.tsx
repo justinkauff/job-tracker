@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchApplications, updateApplication } from './api'
 import { ApplicationDialog } from './components/ApplicationDialog'
 import { Board } from './components/Board'
-import type { Application, ApplicationRow, ApplicationStatus } from './types'
+import type { Application, ApplicationRow, ApplicationStatus, Contact } from './types'
 
 // What the dialog is showing: nothing, the "add" form, or the edit form for one application
 type DialogState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; application: Application }
@@ -66,6 +66,17 @@ export default function App() {
     setDialog({ mode: 'closed' })
   }
 
+  // The contacts section saved a change: store the new list on that application,
+  // which updates both the dialog and the card on the board
+  function handleContactsChange(applicationId: number, contacts: Contact[]) {
+    replaceApplication(applicationId, (a) => ({ ...a, contacts }))
+  }
+
+  // The live version of the application being edited. dialog.application is a snapshot
+  // from when the dialog opened, so its contacts would go stale after a change.
+  const editing =
+    dialog.mode === 'edit' ? applications.find((a) => a.id === dialog.application.id) : undefined
+
   return (
     <main>
       <header className="header">
@@ -106,6 +117,10 @@ export default function App() {
         <ApplicationDialog
           key={dialog.mode === 'edit' ? dialog.application.id : 'new'}
           application={dialog.mode === 'edit' ? dialog.application : null}
+          contacts={editing?.contacts ?? []}
+          onContactsChange={(contacts) => {
+            if (editing) handleContactsChange(editing.id, contacts)
+          }}
           onClose={() => setDialog({ mode: 'closed' })}
           onSaved={handleSaved}
           onDeleted={handleDeleted}

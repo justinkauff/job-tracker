@@ -9,9 +9,11 @@ data/
 .env.*
 !.env.example
 
-# Rebuilt inside the image for Linux
-node_modules/
-dist/
+# Rebuilt inside the image for Linux.
+# **/ matters: unlike .gitignore, a plain pattern here only matches at the project root,
+# so "node_modules/" alone would let web/node_modules (Windows builds) slip in.
+**/node_modules/
+**/dist/
 
 # Not needed to run the app
 .git/

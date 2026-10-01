@@ -15,8 +15,20 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
-# ---------- Stage 2: runtime ----------
-# A fresh image with only what's needed to run: no TypeScript, no tsx.
+# ---------- Stage 2: build the React board ----------
+# Vite turns web/src into plain HTML, CSS, and JS files in web/dist.
+# Only those files ship; React's build tools stay behind in this stage.
+FROM node:24-slim AS web
+WORKDIR /app/web
+
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+
+COPY web/ ./
+RUN npm run build
+
+# ---------- Stage 3: runtime ----------
+# A fresh image with only what's needed to run: no TypeScript, no tsx, no Vite.
 FROM node:24-slim
 WORKDIR /app
 ENV NODE_ENV=production
@@ -27,6 +39,8 @@ RUN npm ci --omit=dev --ignore-scripts
 COPY --from=build /app/dist ./dist
 # connection.ts reads the schema from src/db/schema.sql (tsc doesn't copy .sql files)
 COPY src/db/schema.sql ./src/db/schema.sql
+# The built board, served by Express (see app.ts)
+COPY --from=web /app/web/dist ./web/dist
 
 # The database lives in /app/data, mounted from outside the container by compose.yaml.
 # Create it owned by the non-root "node" user so the app can write there.

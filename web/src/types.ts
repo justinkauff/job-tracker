@@ -35,3 +35,6 @@ export interface Application {
   created_at: string
   updated_at: string
 }
+
+// The fields a PATCH can change: any subset of everything except what the server sets
+export type ApplicationChanges = Partial<Omit<Application, 'id' | 'created_at' | 'updated_at'>>

@@ -1,5 +1,6 @@
 // The ONLY file with SQL for applications.
 // Every value goes in through a placeholder (@name or ?), never pasted into the SQL text.
+import { Contact } from "../contacts/contacts.schema.js";
 import { db } from "../db/connection.js";
 import type {
   Application,
@@ -27,7 +28,7 @@ function sentColumns(input: Record<string, unknown>): string[] {
 
 export interface ApplicationWithContacts extends Application {
   // Typed loosely for now; becomes Contact[] once the contacts feature exists
-  contacts: Record<string, unknown>[];
+  contacts: Contact[];
 }
 
 export function createApplication(input: CreateApplicationInput): Application {
@@ -72,7 +73,7 @@ export function getApplicationById(id: number): ApplicationWithContacts | undefi
 
   const contacts = db
     .prepare("SELECT * FROM contacts WHERE application_id = ? ORDER BY id")
-    .all(id) as Record<string, unknown>[];
+    .all(id) as Contact[];
   return { ...application, contacts };
 }
 

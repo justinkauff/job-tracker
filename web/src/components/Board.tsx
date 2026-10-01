@@ -17,9 +17,10 @@ interface BoardProps {
   applications: Application[]
   // The Board doesn't save anything itself; it tells its parent what the user did
   onStatusChange: (id: number, status: ApplicationStatus) => void
+  onOpen: (application: Application) => void
 }
 
-export function Board({ applications, onStatusChange }: BoardProps) {
+export function Board({ applications, onStatusChange, onOpen }: BoardProps) {
   // Which card is being dragged right now (null when nothing is)
   const [activeId, setActiveId] = useState<number | null>(null)
 
@@ -27,8 +28,11 @@ export function Board({ applications, onStatusChange }: BoardProps) {
     // A drag only starts after the pointer moves 5px, so a plain click
     // (like on the "Posting" link) still works as a click
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    // Tab to a card, Space to pick it up, arrow keys to move, Space to drop
-    useSensor(KeyboardSensor),
+    // Tab to a card, Space to pick it up, arrow keys to move, Space to drop.
+    // Enter is left out (dnd-kit uses it by default) because Enter opens the card.
+    useSensor(KeyboardSensor, {
+      keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space'] },
+    }),
   )
 
   // Derived data: the columns are computed from the one applications list on every render,
@@ -66,7 +70,12 @@ export function Board({ applications, onStatusChange }: BoardProps) {
     >
       <div className="board">
         {columns.map((column) => (
-          <Column key={column.status} status={column.status} applications={column.applications} />
+          <Column
+            key={column.status}
+            status={column.status}
+            applications={column.applications}
+            onOpen={onOpen}
+          />
         ))}
       </div>
 

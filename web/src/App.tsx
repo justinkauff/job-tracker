@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { fetchApplications, updateApplication } from './api'
+import { ApplicationDialog } from './components/ApplicationDialog'
 import { Board } from './components/Board'
 import type { Application, ApplicationStatus } from './types'
+
+// What the dialog is showing: nothing, the "add" form, or the edit form for one application
+type DialogState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; application: Application }
 
 export default function App() {
   // State: values that, when changed, make React re-run this function and update the page
@@ -9,6 +13,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [dialog, setDialog] = useState<DialogState>({ mode: 'closed' })
 
   // Runs after the first render. The empty [] means "only once", not on every re-render.
   useEffect(() => {
@@ -41,11 +46,34 @@ export default function App() {
       })
   }
 
+  // The form waits for the server before closing (not optimistic): the server might
+  // reject the input, and the form needs to stay open to show why
+  function handleSaved(saved: Application) {
+    const exists = applications.some((a) => a.id === saved.id)
+    setApplications((current) =>
+      exists ? current.map((a) => (a.id === saved.id ? saved : a)) : [saved, ...current],
+    )
+    setDialog({ mode: 'closed' })
+  }
+
+  function handleDeleted(id: number) {
+    setApplications((current) => current.filter((a) => a.id !== id))
+    setDialog({ mode: 'closed' })
+  }
+
   return (
     <main>
       <header className="header">
         <h1>Job Tracker</h1>
         {!loading && !error && <span className="total">{applications.length} applications</span>}
+        <button
+          type="button"
+          className="button-primary header-add"
+          onClick={() => setDialog({ mode: 'add' })}
+          disabled={loading || error !== null}
+        >
+          + Add application
+        </button>
       </header>
 
       {saveError && (
@@ -60,7 +88,23 @@ export default function App() {
       {loading && <p>Loading…</p>}
       {error && <p className="error">{error}</p>}
       {!loading && !error && (
-        <Board applications={applications} onStatusChange={handleStatusChange} />
+        <Board
+          applications={applications}
+          onStatusChange={handleStatusChange}
+          onOpen={(application) => setDialog({ mode: 'edit', application })}
+        />
+      )}
+
+      {/* Rendered only while open. The key gives each application its own fresh form,
+          so switching from one card to another never shows the previous card's values. */}
+      {dialog.mode !== 'closed' && (
+        <ApplicationDialog
+          key={dialog.mode === 'edit' ? dialog.application.id : 'new'}
+          application={dialog.mode === 'edit' ? dialog.application : null}
+          onClose={() => setDialog({ mode: 'closed' })}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+        />
       )}
     </main>
   )

@@ -1,35 +1,59 @@
 // Every call to the backend lives here, so components never build URLs or parse responses.
 import type { Application, ApplicationChanges } from './types'
 
-export async function fetchApplications(): Promise<Application[]> {
-  const response = await fetch('/applications')
-  if (!response.ok) {
-    throw new Error(`Loading applications failed (${await errorMessage(response)})`)
+// An error from our API. fieldErrors maps a field name to its validation message,
+// built from the 400 response's details array: [{ field, message }].
+export class ApiError extends Error {
+  fieldErrors: Record<string, string>
+
+  constructor(message: string, fieldErrors: Record<string, string> = {}) {
+    super(message)
+    this.fieldErrors = fieldErrors
   }
-  return response.json()
 }
 
-export async function updateApplication(
-  id: number,
-  changes: ApplicationChanges,
-): Promise<Application> {
-  const response = await fetch(`/applications/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(changes),
+export function fetchApplications(): Promise<Application[]> {
+  return request('/applications')
+}
+
+export function createApplication(values: ApplicationChanges): Promise<Application> {
+  return request('/applications', { method: 'POST', body: values })
+}
+
+export function updateApplication(id: number, changes: ApplicationChanges): Promise<Application> {
+  return request(`/applications/${id}`, { method: 'PATCH', body: changes })
+}
+
+export function deleteApplication(id: number): Promise<void> {
+  return request(`/applications/${id}`, { method: 'DELETE' })
+}
+
+// One place that sends a request, turns the body into JSON, and turns errors into ApiError.
+// <T> is a generic, like Java's: each caller says what type the response holds.
+async function request<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
+  const response = await fetch(path, {
+    method: options.method ?? 'GET',
+    headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+    body: options.body ? JSON.stringify(options.body) : undefined,
   })
+
   if (!response.ok) {
-    throw new Error(`Saving failed (${await errorMessage(response)})`)
+    throw await toApiError(response)
   }
-  return response.json()
+  // 204 No Content (e.g. after DELETE) has no body to parse
+  return response.status === 204 ? (undefined as T) : response.json()
 }
 
-// Our API sends errors as { "error": "..." }. Fall back to the status code if it didn't.
-async function errorMessage(response: Response): Promise<string> {
+async function toApiError(response: Response): Promise<ApiError> {
   try {
     const body = await response.json()
-    return body.error ?? `HTTP ${response.status}`
+    const fieldErrors: Record<string, string> = {}
+    for (const detail of body.details ?? []) {
+      // A detail with an empty field is about the whole body, not one input
+      if (detail.field) fieldErrors[detail.field] = detail.message
+    }
+    return new ApiError(body.error ?? `HTTP ${response.status}`, fieldErrors)
   } catch {
-    return `HTTP ${response.status}`
+    return new ApiError(`HTTP ${response.status}`)
   }
 }

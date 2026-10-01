@@ -20,7 +20,14 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         {location && <span>{location}</span>}
         {url && (
           // rel="noreferrer" stops the opened page from seeing or controlling this tab
-          <a href={url} target="_blank" rel="noreferrer">
+          // stopPropagation: following the link shouldn't also open the edit dialog
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             Posting ↗
           </a>
         )}

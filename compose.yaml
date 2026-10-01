@@ -1,0 +1,14 @@
+# Runs the whole app with one command: docker compose up -d
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000" # your PC's port : the container's port
+    environment: # replaces .env inside the container
+      PORT: 3000
+      DB_PATH: /app/data/jobtracker.db
+    volumes:
+      # Keep the database on your PC, outside the container, so it survives rebuilds.
+      # It's the same data/jobtracker.db that npm run dev uses.
+      - ./data:/app/data
+    restart: unless-stopped # start again automatically whenever Docker Desktop starts

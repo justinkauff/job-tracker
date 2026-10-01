@@ -1,0 +1,21 @@
+# Files NOT copied into the Docker image
+
+# Personal data: never bake it into an image
+tracker.csv
+data/
+*.db
+*.db-*
+.env
+.env.*
+!.env.example
+
+# Rebuilt inside the image for Linux
+node_modules/
+dist/
+
+# Not needed to run the app
+.git/
+.vscode/
+docs/
+samples/
+*.md

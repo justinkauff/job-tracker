@@ -1,5 +1,11 @@
 // Every call to the backend lives here, so components never build URLs or parse responses.
-import type { Application, ApplicationChanges, ApplicationRow } from './types'
+import type {
+  Application,
+  ApplicationChanges,
+  ApplicationRow,
+  Contact,
+  ContactChanges,
+} from './types'
 
 // An error from our API. fieldErrors maps a field name to its validation message,
 // built from the 400 response's details array: [{ field, message }].
@@ -27,6 +33,21 @@ export function updateApplication(id: number, changes: ApplicationChanges): Prom
 
 export function deleteApplication(id: number): Promise<void> {
   return request(`/applications/${id}`, { method: 'DELETE' })
+}
+
+// Contacts are created under their application, then edited and deleted by their own id
+// (the same URL design as the API: POST /applications/:id/contacts, PATCH/DELETE /contacts/:id)
+
+export function createContact(applicationId: number, values: ContactChanges): Promise<Contact> {
+  return request(`/applications/${applicationId}/contacts`, { method: 'POST', body: values })
+}
+
+export function updateContact(id: number, changes: ContactChanges): Promise<Contact> {
+  return request(`/contacts/${id}`, { method: 'PATCH', body: changes })
+}
+
+export function deleteContact(id: number): Promise<void> {
+  return request(`/contacts/${id}`, { method: 'DELETE' })
 }
 
 // One place that sends a request, turns the body into JSON, and turns errors into ApiError.

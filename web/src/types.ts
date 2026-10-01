@@ -12,6 +12,17 @@ export const APPLICATION_STATUSES = [
 
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 
+// Column headings. Record<ApplicationStatus, string> makes TypeScript require a label
+// for every status: adding a status without a label is a compile error.
+export const STATUS_LABELS: Record<ApplicationStatus, string> = {
+  wishlist: 'Wishlist',
+  applied: 'Applied',
+  interviewing: 'Interviewing',
+  offer: 'Offer',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+}
+
 export interface Application {
   id: number
   company: string

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchApplications } from './api'
+import { Board } from './components/Board'
 import type { Application } from './types'
 
 export default function App() {
@@ -18,25 +19,14 @@ export default function App() {
 
   return (
     <main>
-      <h1>Job Tracker</h1>
+      <header className="header">
+        <h1>Job Tracker</h1>
+        {!loading && !error && <span className="total">{applications.length} applications</span>}
+      </header>
 
       {loading && <p>Loading…</p>}
       {error && <p className="error">{error}</p>}
-
-      {!loading && !error && (
-        <>
-          <p>{applications.length} applications</p>
-          <ul className="application-list">
-            {applications.map((application) => (
-              <li key={application.id}>
-                <strong>{application.company}</strong>
-                {application.role && <> · {application.role}</>}
-                <span className="status">{application.status}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {!loading && !error && <Board applications={applications} />}
     </main>
   )
 }

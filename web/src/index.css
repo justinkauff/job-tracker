@@ -33,33 +33,100 @@ main {
   padding: 16px 24px;
 }
 
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 h1 {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 24px;
+}
+
+.total {
+  color: var(--muted);
 }
 
 .error {
   color: var(--danger);
 }
 
-.application-list {
-  list-style: none;
-  padding: 0;
-  max-width: 640px;
+/* ---------- Board ---------- */
+
+/* One column per status, side by side. Each column is at least 230px wide;
+   if the window is too narrow for all six, the board scrolls sideways. */
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
-.application-list li {
+.column {
+  background: color-mix(in srgb, var(--border) 35%, transparent);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 200px;
+}
+
+.column-title {
   display: flex;
-  gap: 6px;
-  padding: 8px 12px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  margin: 0 0 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.column-count {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.column-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.column-empty {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+/* ---------- Card ---------- */
+
+.card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
+  padding: 10px 12px;
 }
 
-.status {
-  margin-left: auto;
-  color: var(--muted);
+.card-company {
+  font-weight: 600;
+}
+
+.card-role {
   font-size: 14px;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card-meta a {
+  color: var(--accent);
+  text-decoration: none;
 }

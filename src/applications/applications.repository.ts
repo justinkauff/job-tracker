@@ -1,6 +1,6 @@
 // The ONLY file with SQL for applications.
 // Every value goes in through a placeholder (@name or ?), never pasted into the SQL text.
-import { Contact } from "../contacts/contacts.schema.js";
+import type { Contact } from "../contacts/contacts.schema.js";
 import { db } from "../db/connection.js";
 import type {
   Application,
@@ -27,7 +27,6 @@ function sentColumns(input: Record<string, unknown>): string[] {
 }
 
 export interface ApplicationWithContacts extends Application {
-  // Typed loosely for now; becomes Contact[] once the contacts feature exists
   contacts: Contact[];
 }
 
@@ -64,7 +63,7 @@ export function applicationExists(company: string, role: string | null | undefin
   return row !== undefined;
 }
 
-export function listApplications(filters: ListApplicationsQuery): Application[] {
+export function listApplications(filters: ListApplicationsQuery): ApplicationWithContacts[] {
   const conditions: string[] = [];
   const params: Record<string, string> = {};
 
@@ -80,7 +79,22 @@ export function listApplications(filters: ListApplicationsQuery): Application[] 
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const sql = `SELECT * FROM applications ${where} ORDER BY created_at DESC, id DESC`;
-  return db.prepare(sql).all(params) as Application[];
+  const applications = db.prepare(sql).all(params) as Application[];
+
+  // Attach contacts with ONE more query, not one query per application (the "N+1" problem).
+  // Group them by application_id in a Map: application id → that application's contacts.
+  const contacts = db.prepare("SELECT * FROM contacts ORDER BY id").all() as Contact[];
+  const contactsByApplication = new Map<number, Contact[]>();
+  for (const contact of contacts) {
+    const list = contactsByApplication.get(contact.application_id) ?? [];
+    list.push(contact);
+    contactsByApplication.set(contact.application_id, list);
+  }
+
+  return applications.map((application) => ({
+    ...application,
+    contacts: contactsByApplication.get(application.id) ?? [],
+  }));
 }
 
 export function getApplicationById(id: number): ApplicationWithContacts | undefined {

@@ -1,5 +1,5 @@
 import { formatDate } from '../format'
-import type { Application } from '../types'
+import { OUTREACH_LABELS, type Application, type Contact } from '../types'
 
 // Props: the inputs a parent passes in, like constructor arguments.
 // A component never changes its props; it only displays them.
@@ -32,6 +32,30 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
           </a>
         )}
       </div>
+
+      <ContactLine contacts={application.contacts} />
     </article>
+  )
+}
+
+// "Need to find contact" from the old spreadsheet, now computed instead of typed by hand:
+// it shows whenever an application has no contacts
+function ContactLine({ contacts }: { contacts: Contact[] }) {
+  if (contacts.length === 0) {
+    return <div className="card-contact card-contact-missing">⚠ No contact yet</div>
+  }
+
+  const [first] = contacts
+  const others = contacts.length - 1
+  // Join only the parts that exist, e.g. "Pat Recruiter · Recruiter · Reached out"
+  const details = [first.name, first.title, OUTREACH_LABELS[first.outreach_status]]
+    .filter(Boolean)
+    .join(' · ')
+
+  return (
+    <div className="card-contact">
+      Contact: {details}
+      {others > 0 && <span className="card-contact-more"> +{others} more</span>}
+    </div>
   )
 }

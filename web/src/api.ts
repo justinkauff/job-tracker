@@ -1,5 +1,5 @@
 // Every call to the backend lives here, so components never build URLs or parse responses.
-import type { Application, ApplicationChanges } from './types'
+import type { Application, ApplicationChanges, ApplicationRow } from './types'
 
 // An error from our API. fieldErrors maps a field name to its validation message,
 // built from the 400 response's details array: [{ field, message }].
@@ -16,11 +16,12 @@ export function fetchApplications(): Promise<Application[]> {
   return request('/applications')
 }
 
-export function createApplication(values: ApplicationChanges): Promise<Application> {
+// POST and PATCH return the row without contacts (ApplicationRow)
+export function createApplication(values: ApplicationChanges): Promise<ApplicationRow> {
   return request('/applications', { method: 'POST', body: values })
 }
 
-export function updateApplication(id: number, changes: ApplicationChanges): Promise<Application> {
+export function updateApplication(id: number, changes: ApplicationChanges): Promise<ApplicationRow> {
   return request(`/applications/${id}`, { method: 'PATCH', body: changes })
 }
 

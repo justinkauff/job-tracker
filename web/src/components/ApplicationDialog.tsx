@@ -6,6 +6,7 @@ import {
   STATUS_LABELS,
   type Application,
   type ApplicationChanges,
+  type ApplicationRow,
   type ApplicationStatus,
 } from '../types'
 
@@ -13,7 +14,7 @@ interface ApplicationDialogProps {
   // The application to edit, or null to add a new one
   application: Application | null
   onClose: () => void
-  onSaved: (saved: Application) => void
+  onSaved: (saved: ApplicationRow) => void
   onDeleted: (id: number) => void
 }
 
@@ -139,7 +140,7 @@ export function ApplicationDialog({ application, onClose, onSaved, onDeleted }: 
             Cancel
           </button>
           <button type="submit" className="button-primary" disabled={busy}>
-            {busy ? 'Savingâ€¦' : 'Save'}
+            {busy ? 'SavingÃ¢â‚¬Â¦' : 'Save'}
           </button>
         </div>
       </form>
@@ -183,7 +184,7 @@ function initialValues(application: Application | null): FormValues {
   }
 }
 
-// Form strings â†’ API values. Empty optional fields become null, which clears them on edit.
+// Form strings Ã¢â€ â€™ API values. Empty optional fields become null, which clears them on edit.
 function toPayload(values: FormValues): ApplicationChanges {
   const orNull = (text: string) => (text.trim() === '' ? null : text.trim())
   return {

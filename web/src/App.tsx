@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchApplications, updateApplication } from './api'
 import { ApplicationDialog } from './components/ApplicationDialog'
 import { Board } from './components/Board'
-import type { Application, ApplicationStatus } from './types'
+import type { Application, ApplicationRow, ApplicationStatus } from './types'
 
 // What the dialog is showing: nothing, the "add" form, or the edit form for one application
 type DialogState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; application: Application }
@@ -39,7 +39,8 @@ export default function App() {
     replaceApplication(id, (a) => ({ ...a, status: newStatus }))
 
     updateApplication(id, { status: newStatus })
-      .then((saved) => replaceApplication(id, () => saved))
+      // The PATCH response has no contacts, so keep the ones the card already had
+      .then((saved) => replaceApplication(id, (a) => ({ ...saved, contacts: a.contacts })))
       .catch((err: Error) => {
         replaceApplication(id, (a) => ({ ...a, status: oldStatus }))
         setSaveError(err.message)
@@ -48,10 +49,14 @@ export default function App() {
 
   // The form waits for the server before closing (not optimistic): the server might
   // reject the input, and the form needs to stay open to show why
-  function handleSaved(saved: Application) {
+  function handleSaved(saved: ApplicationRow) {
     const exists = applications.some((a) => a.id === saved.id)
     setApplications((current) =>
-      exists ? current.map((a) => (a.id === saved.id ? saved : a)) : [saved, ...current],
+      exists
+        ? // Edited: the response has no contacts, so keep the existing ones
+          current.map((a) => (a.id === saved.id ? { ...saved, contacts: a.contacts } : a))
+        : // New: it can't have contacts yet
+          [{ ...saved, contacts: [] }, ...current],
     )
     setDialog({ mode: 'closed' })
   }

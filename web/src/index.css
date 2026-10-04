@@ -142,17 +142,55 @@ button:disabled {
   font-size: 13px;
 }
 
-/* ---------- Contacts (inside the edit dialog) ---------- */
+/* ---------- Contacts and documents (inside the edit dialog) ---------- */
 
-.contacts {
+.contacts,
+.documents {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
 
-.contacts h3 {
+.contacts h3,
+.documents h3 {
   margin: 0 0 10px;
   font-size: 15px;
+}
+
+.document-kind {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.documents a {
+  color: var(--accent);
+  word-break: break-word; /* long filenames wrap instead of widening the dialog */
+}
+
+.document-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.document-upload select {
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.document-upload input[type='file'] {
+  flex: 1;
+  min-width: 0;
 }
 
 .contacts-empty {
@@ -342,6 +380,12 @@ button:disabled {
   margin-top: 6px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.card-documents {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .card-contact {

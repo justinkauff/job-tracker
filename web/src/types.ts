@@ -37,9 +37,12 @@ export interface ApplicationRow {
   updated_at: string
 }
 
-// What GET /applications returns: each row plus its contacts.
-// "&" combines two types: everything in ApplicationRow, plus a contacts field.
-export type Application = ApplicationRow & { contacts: Contact[] }
+// What GET /applications returns: each row plus its contacts and documents.
+// "&" combines two types: everything in ApplicationRow, plus these two fields.
+export type Application = ApplicationRow & {
+  contacts: Contact[]
+  documents: ApplicationDocument[]
+}
 
 // The fields a PATCH can change: any subset of everything except what the server sets
 export type ApplicationChanges = Partial<Omit<ApplicationRow, 'id' | 'created_at' | 'updated_at'>>
@@ -88,3 +91,31 @@ export interface Contact {
 export type ContactChanges = Partial<
   Omit<Contact, 'id' | 'application_id' | 'created_at' | 'updated_at'>
 >
+
+// ---------- Documents ----------
+// Copies of the API's document types (src/documents/documents.schema.ts).
+// Named ApplicationDocument because "Document" is already the browser's type for the page.
+
+export const DOCUMENT_KINDS = ['resume', 'cover_letter', 'other'] as const
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number]
+
+export const DOCUMENT_KIND_LABELS: Record<DocumentKind, string> = {
+  resume: 'Resume',
+  cover_letter: 'Cover letter',
+  other: 'Other',
+}
+
+export interface ApplicationDocument {
+  id: number
+  application_id: number
+  kind: DocumentKind
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  created_at: string
+}
+
+// Same limits as the server (src/documents/documents.files.ts), checked in the browser
+// first so you get an instant message instead of waiting for a large upload to fail
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+export const ALLOWED_EXTENSIONS = ['.pdf', '.docx']

@@ -7,18 +7,22 @@ import {
   type Application,
   type ApplicationChanges,
   type ApplicationRow,
+  type ApplicationDocument,
   type ApplicationStatus,
   type Contact,
 } from '../types'
 import { ContactsSection } from './ContactsSection'
+import { DocumentsSection } from './DocumentsSection'
 
 interface ApplicationDialogProps {
   // The application to edit, or null to add a new one
   application: Application | null
-  // The live contacts from App's state (not the snapshot inside `application`),
-  // so changes show up here and on the board at the same time
+  // The live contacts and documents from App's state (not the snapshot inside
+  // `application`), so changes show up here and on the board at the same time
   contacts: Contact[]
   onContactsChange: (contacts: Contact[]) => void
+  documents: ApplicationDocument[]
+  onDocumentsChange: (documents: ApplicationDocument[]) => void
   onClose: () => void
   onSaved: (saved: ApplicationRow) => void
   onDeleted: (id: number) => void
@@ -40,6 +44,8 @@ export function ApplicationDialog({
   application,
   contacts,
   onContactsChange,
+  documents,
+  onDocumentsChange,
   onClose,
   onSaved,
   onDeleted,
@@ -162,11 +168,18 @@ export function ApplicationDialog({
           contacts section gets its own form in step 3. Only when editing, because a new
           application has no id yet, so it can't have contacts. */}
       {!isNew && (
-        <ContactsSection
-          applicationId={application.id}
-          contacts={contacts}
-          onChange={onContactsChange}
-        />
+        <>
+          <DocumentsSection
+            applicationId={application.id}
+            documents={documents}
+            onChange={onDocumentsChange}
+          />
+          <ContactsSection
+            applicationId={application.id}
+            contacts={contacts}
+            onChange={onContactsChange}
+          />
+        </>
       )}
     </dialog>
   )

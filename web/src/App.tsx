@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { fetchApplications, updateApplication } from './api'
 import { ApplicationDialog } from './components/ApplicationDialog'
 import { Board } from './components/Board'
-import type { Application, ApplicationRow, ApplicationStatus, Contact } from './types'
+import type {
+  Application,
+  ApplicationDocument,
+  ApplicationRow,
+  ApplicationStatus,
+  Contact,
+} from './types'
 
 // What the dialog is showing: nothing, the "add" form, or the edit form for one application
 type DialogState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; application: Application }
@@ -39,8 +45,7 @@ export default function App() {
     replaceApplication(id, (a) => ({ ...a, status: newStatus }))
 
     updateApplication(id, { status: newStatus })
-      // The PATCH response has no contacts, so keep the ones the card already had
-      .then((saved) => replaceApplication(id, (a) => ({ ...saved, contacts: a.contacts })))
+      .then((saved) => replaceApplication(id, (a) => keepAttached(saved, a)))
       .catch((err: Error) => {
         replaceApplication(id, (a) => ({ ...a, status: oldStatus }))
         setSaveError(err.message)
@@ -53,10 +58,9 @@ export default function App() {
     const exists = applications.some((a) => a.id === saved.id)
     setApplications((current) =>
       exists
-        ? // Edited: the response has no contacts, so keep the existing ones
-          current.map((a) => (a.id === saved.id ? { ...saved, contacts: a.contacts } : a))
-        : // New: it can't have contacts yet
-          [{ ...saved, contacts: [] }, ...current],
+        ? current.map((a) => (a.id === saved.id ? keepAttached(saved, a) : a))
+        : // New: it can't have contacts or documents yet
+          [{ ...saved, contacts: [], documents: [] }, ...current],
     )
     setDialog({ mode: 'closed' })
   }
@@ -72,8 +76,13 @@ export default function App() {
     replaceApplication(applicationId, (a) => ({ ...a, contacts }))
   }
 
+  // Same for documents
+  function handleDocumentsChange(applicationId: number, documents: ApplicationDocument[]) {
+    replaceApplication(applicationId, (a) => ({ ...a, documents }))
+  }
+
   // The live version of the application being edited. dialog.application is a snapshot
-  // from when the dialog opened, so its contacts would go stale after a change.
+  // from when the dialog opened, so its contacts and documents would go stale after a change.
   const editing =
     dialog.mode === 'edit' ? applications.find((a) => a.id === dialog.application.id) : undefined
 
@@ -121,6 +130,10 @@ export default function App() {
           onContactsChange={(contacts) => {
             if (editing) handleContactsChange(editing.id, contacts)
           }}
+          documents={editing?.documents ?? []}
+          onDocumentsChange={(documents) => {
+            if (editing) handleDocumentsChange(editing.id, documents)
+          }}
           onClose={() => setDialog({ mode: 'closed' })}
           onSaved={handleSaved}
           onDeleted={handleDeleted}
@@ -128,4 +141,10 @@ export default function App() {
       )}
     </main>
   )
+}
+
+// POST and PATCH return a bare row without contacts or documents. Combine the saved row
+// with the lists the board already has, so the card doesn't lose them after a save.
+function keepAttached(saved: ApplicationRow, previous: Application): Application {
+  return { ...saved, contacts: previous.contacts, documents: previous.documents }
 }

@@ -1,5 +1,12 @@
 import { formatDate } from '../format'
-import { OUTREACH_LABELS, type Application, type Contact } from '../types'
+import {
+  DOCUMENT_KIND_LABELS,
+  DOCUMENT_KINDS,
+  OUTREACH_LABELS,
+  type Application,
+  type ApplicationDocument,
+  type Contact,
+} from '../types'
 
 // Props: the inputs a parent passes in, like constructor arguments.
 // A component never changes its props; it only displays them.
@@ -33,8 +40,20 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
         )}
       </div>
 
+      <DocumentLine documents={application.documents} />
       <ContactLine contacts={application.contacts} />
     </article>
+  )
+}
+
+// "📄 Resume · Cover letter": which kinds of documents are attached, each listed once
+// (two resume versions still show "Resume" once). Nothing is shown when there are none.
+function DocumentLine({ documents }: { documents: ApplicationDocument[] }) {
+  const kinds = DOCUMENT_KINDS.filter((kind) => documents.some((d) => d.kind === kind))
+  if (kinds.length === 0) return null
+
+  return (
+    <div className="card-documents">📄 {kinds.map((kind) => DOCUMENT_KIND_LABELS[kind]).join(' · ')}</div>
   )
 }
 

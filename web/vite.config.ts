@@ -13,6 +13,7 @@ export default defineConfig({
     proxy: {
       '/applications': api,
       '/contacts': api,
+      '/documents': api,
       '/import': api,
       '/health': api,
     },

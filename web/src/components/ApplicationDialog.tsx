@@ -174,7 +174,7 @@ export function ApplicationDialog({
 
 // A label wrapped around its input, with the input's error message underneath.
 // children is whatever is placed between <Field> and </Field>.
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
     <label className="field">
       <span className="field-label">{label}</span>

@@ -7,6 +7,7 @@
   --accent: #0969da;
   --danger: #cf222e;
   --warning: #9a6700;
+  --success: #1a7f37;
 
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -24,6 +25,7 @@
     --accent: #4493f8;
     --danger: #f85149;
   --warning: #d29922;
+  --success: #3fb950;
   }
 }
 
@@ -191,6 +193,39 @@ button:disabled {
 .contact-statuses,
 .contact-detail {
   font-size: 13px;
+}
+
+.contact-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.contact-selects select {
+  font: inherit;
+  font-size: 13px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.contacts-add {
+  margin-top: 10px;
+}
+
+.contact-form {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+
+.card-contact-referred {
+  color: var(--success);
+  font-weight: 600;
 }
 
 .button-danger-quiet {

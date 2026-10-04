@@ -395,8 +395,21 @@ button:disabled {
   font-size: 13px;
 }
 
-.card-contact-missing {
+/* A message at the top of the dialog, e.g. when a new application saved only partly */
+.notice {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--warning);
+  border-radius: 6px;
   color: var(--warning);
+  font-size: 14px;
+}
+
+/* Save/Cancel below the documents and contacts when adding an application */
+.dialog-footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .card-contact-more {

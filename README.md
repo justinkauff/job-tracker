@@ -11,15 +11,18 @@ Built with **TypeScript, Node.js, Express, SQLite, React, and Docker**, one stag
 ## Features
 
 - **Status board.** Six columns (Wishlist, Applied, Interviewing, Offer, Rejected, Withdrawn). Drag a card to change its status; it saves immediately and rolls back if the save fails. Works with the keyboard too (Tab to a card, Space to pick up, arrows to move, Space to drop).
-- **Add, edit, and delete applications** in a form that shows the server's validation messages next to the field they belong to.
-- **Contacts and referrals.** Track who you've reached out to and whether they've referred you. Cards show **✓ Referred by …**, or **⚠ No contact yet** when there's nobody to reach out to.
+- **Add an application in one step.** The Add form takes the job details plus, optionally, your resume, cover letter, and contacts; one Save creates them all. If a file or contact fails to save, the application is kept and reopened so you can retry just that part.
+- **Edit and delete applications** in a form that shows the server's validation messages next to the field they belong to.
+- **Contacts and referrals.** Track who you've reached out to and whether they've referred you. Cards show **✓ Referred by …**, or the contact's name and whether they've responded.
 - **Documents.** Attach the resume and cover letter (PDF or DOCX, up to 10 MB) you used for each application. PDFs open in the browser; DOCX files download.
 - **CSV import.** Load an exported spreadsheet. Messy rows (bad dates, unknown statuses, duplicates) are skipped with a reason, and the import can be re-run safely.
 - **Light and dark mode**, following your system setting.
 
-| Editing an application | Dragging a card |
+| Adding an application | Editing an application |
 |---|---|
-| ![The edit dialog with documents and contacts](docs/screenshots/edit-dialog.png) | ![A card being dragged into the Interviewing column](docs/screenshots/drag.png) |
+| ![The add form with a resume and a contact waiting to be saved](docs/screenshots/add-dialog.png) | ![The edit dialog with documents and contacts](docs/screenshots/edit-dialog.png) |
+
+![A card being dragged into the Interviewing column](docs/screenshots/drag.png)
 
 ![The board in dark mode](docs/screenshots/board-dark.png)
 
@@ -131,7 +134,8 @@ web/src/                  the board (React)
 
 A few decisions worth noting:
 
-- **"Need to find a contact" is a query, not a status.** The old spreadsheet had it as a status. Here, any application with no contacts shows it automatically.
+- **"Need to find a contact" is a query, not a status.** The old spreadsheet had it as a status. Here it's simply an application with no contacts, so nothing has to be kept up to date by hand.
+- **Adding with attachments is several requests, not one.** Files and contacts need the application's id, so the Add form holds them as drafts, creates the application, then uploads and creates each one. A failure partway keeps what succeeded and reports the rest.
 - **Dates are stored as ISO `YYYY-MM-DD` text**, which sorts correctly and avoids time-zone shifts (the board formats them itself instead of using `new Date()`).
 - **No N+1 queries.** The board's list loads every contact and document in one query each and groups them in code, rather than one query per application.
 

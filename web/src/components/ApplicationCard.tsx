@@ -57,12 +57,9 @@ function DocumentLine({ documents }: { documents: ApplicationDocument[] }) {
   )
 }
 
-// "Need to find contact" from the old spreadsheet, now computed instead of typed by hand:
-// it shows whenever an application has no contacts
+// Who you're in touch with and where it stands. Nothing is shown when there are no contacts.
 function ContactLine({ contacts }: { contacts: Contact[] }) {
-  if (contacts.length === 0) {
-    return <div className="card-contact card-contact-missing">⚠ No contact yet</div>
-  }
+  if (contacts.length === 0) return null
 
   const others = contacts.length - 1
   const more = others > 0 && <span className="card-contact-more"> +{others} more</span>
@@ -78,9 +75,13 @@ function ContactLine({ contacts }: { contacts: Contact[] }) {
     )
   }
 
+  // Otherwise the first contact and their status, e.g. "Sam Patel · Reached out · Referral asked"
   const [first] = contacts
-  // Join only the parts that exist, e.g. "Pat Recruiter · Recruiter · Reached out"
-  const details = [first.name, first.title, OUTREACH_LABELS[first.outreach_status]]
+  const details = [
+    first.name,
+    OUTREACH_LABELS[first.outreach_status],
+    first.referral_status === 'asked' ? 'Referral asked' : null,
+  ]
     .filter(Boolean)
     .join(' · ')
 

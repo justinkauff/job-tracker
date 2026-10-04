@@ -11,7 +11,11 @@ import type {
 } from './types'
 
 // What the dialog is showing: nothing, the "add" form, or the edit form for one application
-type DialogState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; application: Application }
+// (optionally with a notice at the top, e.g. "these files didn't upload")
+type DialogState =
+  | { mode: 'closed' }
+  | { mode: 'add' }
+  | { mode: 'edit'; application: Application; notice?: string }
 
 export default function App() {
   // State: values that, when changed, make React re-run this function and update the page
@@ -52,17 +56,26 @@ export default function App() {
       })
   }
 
-  // The form waits for the server before closing (not optimistic): the server might
-  // reject the input, and the form needs to stay open to show why
+  // An edit was saved. The form waits for the server before closing (not optimistic):
+  // the server might reject the input, and the form needs to stay open to show why.
   function handleSaved(saved: ApplicationRow) {
-    const exists = applications.some((a) => a.id === saved.id)
-    setApplications((current) =>
-      exists
-        ? current.map((a) => (a.id === saved.id ? keepAttached(saved, a) : a))
-        : // New: it can't have contacts or documents yet
-          [{ ...saved, contacts: [], documents: [] }, ...current],
-    )
+    replaceApplication(saved.id, (a) => keepAttached(saved, a))
     setDialog({ mode: 'closed' })
+  }
+
+  // A new application was created, along with whatever files and contacts saved with it
+  function handleCreated(created: Application, failures: string[]) {
+    setApplications((current) => [created, ...current])
+    if (failures.length === 0) {
+      setDialog({ mode: 'closed' })
+    } else {
+      // The application exists now, so reopen it in edit mode to retry what failed
+      setDialog({
+        mode: 'edit',
+        application: created,
+        notice: `Saved the application, but these didn't save: ${failures.join(' · ')}. You can add them again below.`,
+      })
+    }
   }
 
   function handleDeleted(id: number) {
@@ -134,8 +147,10 @@ export default function App() {
           onDocumentsChange={(documents) => {
             if (editing) handleDocumentsChange(editing.id, documents)
           }}
+          notice={dialog.mode === 'edit' ? (dialog.notice ?? null) : null}
           onClose={() => setDialog({ mode: 'closed' })}
           onSaved={handleSaved}
+          onCreated={handleCreated}
           onDeleted={handleDeleted}
         />
       )}

@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import { ApiError, createContact, deleteContact, updateContact } from '../api'
+import { ApiError } from '../api'
 import {
   OUTREACH_LABELS,
   OUTREACH_STATUSES,
@@ -12,11 +12,17 @@ import {
 } from '../types'
 import { Field } from './ApplicationDialog'
 
+// The section only shows the list and collects what the user wants to do. The parent
+// (ApplicationDialog) decides what each action means: when editing, it saves to the API
+// right away; when adding a new application, it holds the contacts as drafts until Save.
+// Each callback returns a Promise and throws on failure, so the section can show the error.
 interface ContactsSectionProps {
-  applicationId: number
   contacts: Contact[]
-  // Called with the new list after a change, so App can update the board too
-  onChange: (contacts: Contact[]) => void
+  onAdd: (values: ContactChanges) => Promise<void>
+  onUpdate: (contact: Contact, changes: ContactChanges) => Promise<void>
+  onRemove: (contact: Contact) => Promise<void>
+  // Ask "are you sure?" before removing. Saved contacts: yes. Drafts: no, nothing is lost yet.
+  confirmRemove: boolean
 }
 
 // The add-contact form. Every input holds a string while typing ("" means empty).
@@ -40,9 +46,15 @@ const EMPTY_CONTACT: ContactFormValues = {
   referral_status: 'none',
 }
 
-// The contacts part of the edit dialog. It doesn't keep its own copy of the list:
-// App owns the contacts and passes them down; this component reports changes back up.
-export function ContactsSection({ applicationId, contacts, onChange }: ContactsSectionProps) {
+// The contacts part of the dialog. It doesn't keep its own copy of the list:
+// the parent owns the contacts and passes them down; this component reports actions back up.
+export function ContactsSection({
+  contacts,
+  onAdd,
+  onUpdate,
+  onRemove,
+  confirmRemove,
+}: ContactsSectionProps) {
   const [error, setError] = useState<string | null>(null)
   // Which contact is being saved or removed right now, to disable its controls while waiting
   const [busyId, setBusyId] = useState<number | null>(null)
@@ -65,8 +77,7 @@ export function ContactsSection({ applicationId, contacts, onChange }: ContactsS
     setSaving(true)
 
     try {
-      const created = await createContact(applicationId, toPayload(values))
-      onChange([...contacts, created]) // the old list plus the new contact
+      await onAdd(toPayload(values))
       setValues(EMPTY_CONTACT)
       setAdding(false)
     } catch (err) {
@@ -86,14 +97,12 @@ export function ContactsSection({ applicationId, contacts, onChange }: ContactsS
     setAdding(false)
   }
 
-  // Changing a status dropdown saves right away (no Save button).
-  // Like removing, it waits for the server, then swaps in the saved contact.
+  // Changing a status dropdown applies right away (no Save button for it)
   async function handleStatusChange(contact: Contact, changes: ContactChanges) {
     setError(null)
     setBusyId(contact.id)
     try {
-      const saved = await updateContact(contact.id, changes)
-      onChange(contacts.map((c) => (c.id === saved.id ? saved : c)))
+      await onUpdate(contact, changes)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -102,14 +111,12 @@ export function ContactsSection({ applicationId, contacts, onChange }: ContactsS
   }
 
   async function handleRemove(contact: Contact) {
-    if (!window.confirm(`Remove ${contact.name} from this application?`)) return
+    if (confirmRemove && !window.confirm(`Remove ${contact.name} from this application?`)) return
 
     setError(null)
     setBusyId(contact.id)
     try {
-      await deleteContact(contact.id)
-      // Report the list without this contact; App's state (and the board card) updates
-      onChange(contacts.filter((c) => c.id !== contact.id))
+      await onRemove(contact)
     } catch (err) {
       setError((err as Error).message)
     } finally {

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { deleteDocument, documentUrl, uploadDocument } from '../api'
+import { documentUrl } from '../api'
 import { formatBytes, formatDate } from '../format'
 import {
   ALLOWED_EXTENSIONS,
@@ -10,27 +10,29 @@ import {
   type DocumentKind,
 } from '../types'
 
+// Like ContactsSection: this shows the list and collects actions, and the parent
+// (ApplicationDialog) decides what they mean. When editing, onAdd uploads right away;
+// when adding a new application, the files are held as drafts and uploaded on Save.
 interface DocumentsSectionProps {
-  applicationId: number
   documents: ApplicationDocument[]
-  // Called with the new list after a change, so App can update the board too
-  onChange: (documents: ApplicationDocument[]) => void
+  onAdd: (kind: DocumentKind, file: File) => Promise<void>
+  onRemove: (document: ApplicationDocument) => Promise<void>
+  // Drafts haven't been uploaded yet: no link to open them, and no "are you sure?" on remove
+  draft: boolean
 }
 
-// The documents part of the edit dialog. Like ContactsSection, it doesn't keep its own
-// copy of the list: App owns it and passes it down; changes are reported back up.
-export function DocumentsSection({ applicationId, documents, onChange }: DocumentsSectionProps) {
+export function DocumentsSection({ documents, onAdd, onRemove, draft }: DocumentsSectionProps) {
   const [kind, setKind] = useState<DocumentKind>('resume')
   const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
+  const [adding, setAdding] = useState(false)
   const [removingId, setRemovingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // A file input can't be cleared through state (browsers don't let pages set which
-  // file is chosen), so a ref to the real <input> is used to reset it after uploading
+  // file is chosen), so a ref to the real <input> is used to reset it after adding
   const fileInput = useRef<HTMLInputElement>(null)
 
-  async function handleUpload(event: FormEvent) {
+  async function handleAdd(event: FormEvent) {
     event.preventDefault()
     if (!file) return
     setError(null)
@@ -46,26 +48,24 @@ export function DocumentsSection({ applicationId, documents, onChange }: Documen
       return
     }
 
-    setUploading(true)
+    setAdding(true)
     try {
-      const uploaded = await uploadDocument(applicationId, kind, file)
-      onChange([uploaded, ...documents]) // newest first, like the server's order
+      await onAdd(kind, file)
       setFile(null)
       if (fileInput.current) fileInput.current.value = ''
     } catch (err) {
       setError((err as Error).message)
     } finally {
-      setUploading(false)
+      setAdding(false)
     }
   }
 
   async function handleRemove(document: ApplicationDocument) {
-    if (!window.confirm(`Remove ${document.original_name}?`)) return
+    if (!draft && !window.confirm(`Remove ${document.original_name}?`)) return
     setError(null)
     setRemovingId(document.id)
     try {
-      await deleteDocument(document.id)
-      onChange(documents.filter((d) => d.id !== document.id))
+      await onRemove(document)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -77,7 +77,11 @@ export function DocumentsSection({ applicationId, documents, onChange }: Documen
     <section className="documents">
       <h3>Documents</h3>
 
-      {documents.length === 0 && <p className="contacts-empty">No resume or cover letter yet</p>}
+      {documents.length === 0 && (
+        <p className="contacts-empty">
+          {draft ? 'Optional: add your resume and cover letter' : 'No resume or cover letter yet'}
+        </p>
+      )}
 
       <ul className="contact-list">
         {documents.map((document) => (
@@ -85,14 +89,19 @@ export function DocumentsSection({ applicationId, documents, onChange }: Documen
             <div className="contact-main">
               <div>
                 <span className="document-kind">{DOCUMENT_KIND_LABELS[document.kind]}</span>{' '}
-                {/* PDFs open in a new tab; DOCX files download (the server decides via
-                    Content-Disposition). rel="noreferrer" as with the posting link. */}
-                <a href={documentUrl(document.id)} target="_blank" rel="noreferrer">
-                  {document.original_name}
-                </a>
+                {draft ? (
+                  <span>{document.original_name}</span>
+                ) : (
+                  // PDFs open in a new tab; DOCX files download (the server decides via
+                  // Content-Disposition). rel="noreferrer" as with the posting link.
+                  <a href={documentUrl(document.id)} target="_blank" rel="noreferrer">
+                    {document.original_name}
+                  </a>
+                )}
               </div>
               <div className="contact-detail">
-                {formatBytes(document.size_bytes)} · uploaded {formatDate(document.created_at.slice(0, 10))}
+                {formatBytes(document.size_bytes)} ·{' '}
+                {draft ? 'uploads when you save' : `uploaded ${formatDate(document.created_at.slice(0, 10))}`}
               </div>
             </div>
             <button
@@ -108,7 +117,7 @@ export function DocumentsSection({ applicationId, documents, onChange }: Documen
       </ul>
 
       {/* Its own form, outside the application's form (forms can't be nested) */}
-      <form className="document-upload" onSubmit={handleUpload}>
+      <form className="document-upload" onSubmit={handleAdd}>
         <select
           aria-label="Document type"
           value={kind}
@@ -128,8 +137,8 @@ export function DocumentsSection({ applicationId, documents, onChange }: Documen
           accept={ALLOWED_EXTENSIONS.join(',')}
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <button type="submit" className="button-primary" disabled={!file || uploading}>
-          {uploading ? 'Uploading…' : 'Upload'}
+        <button type="submit" className="button-primary" disabled={!file || adding}>
+          {draft ? 'Add' : adding ? 'Uploading…' : 'Upload'}
         </button>
       </form>
 

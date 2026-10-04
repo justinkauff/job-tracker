@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 
 // Thrown by routes when a record doesn't exist. The error handler turns it into a 404.
@@ -30,6 +31,14 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // The body wasn't valid JSON (thrown by express.json())
   if (err.type === "entity.parse.failed") {
     res.status(400).json({ error: "Request body is not valid JSON" });
+    return;
+  }
+
+  // A problem with a file upload, e.g. too large (thrown by multer)
+  if (err instanceof MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE" ? "File is too large (max 10 MB)" : `Upload failed: ${err.message}`;
+    res.status(400).json({ error: message });
     return;
   }
 

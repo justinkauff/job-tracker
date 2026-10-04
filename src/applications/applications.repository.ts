@@ -2,6 +2,11 @@
 // Every value goes in through a placeholder (@name or ?), never pasted into the SQL text.
 import type { Contact } from "../contacts/contacts.schema.js";
 import { db } from "../db/connection.js";
+import {
+  documentsByApplication,
+  documentsForApplication,
+} from "../documents/documents.repository.js";
+import type { ApplicationDocument } from "../documents/documents.schema.js";
 import type {
   Application,
   CreateApplicationInput,
@@ -26,8 +31,10 @@ function sentColumns(input: Record<string, unknown>): string[] {
   return WRITABLE_COLUMNS.filter((column) => input[column] !== undefined);
 }
 
-export interface ApplicationWithContacts extends Application {
+// An application plus everything attached to it
+export interface ApplicationDetails extends Application {
   contacts: Contact[];
+  documents: ApplicationDocument[];
 }
 
 export function createApplication(input: CreateApplicationInput): Application {
@@ -63,7 +70,7 @@ export function applicationExists(company: string, role: string | null | undefin
   return row !== undefined;
 }
 
-export function listApplications(filters: ListApplicationsQuery): ApplicationWithContacts[] {
+export function listApplications(filters: ListApplicationsQuery): ApplicationDetails[] {
   const conditions: string[] = [];
   const params: Record<string, string> = {};
 
@@ -91,13 +98,17 @@ export function listApplications(filters: ListApplicationsQuery): ApplicationWit
     contactsByApplication.set(contact.application_id, list);
   }
 
+  // Documents the same way: one query, grouped by application
+  const documents = documentsByApplication();
+
   return applications.map((application) => ({
     ...application,
     contacts: contactsByApplication.get(application.id) ?? [],
+    documents: documents.get(application.id) ?? [],
   }));
 }
 
-export function getApplicationById(id: number): ApplicationWithContacts | undefined {
+export function getApplicationById(id: number): ApplicationDetails | undefined {
   const application = db
     .prepare("SELECT * FROM applications WHERE id = ?")
     .get(id) as Application | undefined;
@@ -108,7 +119,7 @@ export function getApplicationById(id: number): ApplicationWithContacts | undefi
   const contacts = db
     .prepare("SELECT * FROM contacts WHERE application_id = ? ORDER BY id")
     .all(id) as Contact[];
-  return { ...application, contacts };
+  return { ...application, contacts, documents: documentsForApplication(id) };
 }
 
 export function updateApplication(

@@ -3,6 +3,7 @@ import path from "node:path";
 import { applicationsRouter } from "./applications/applications.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { contactsRouter } from "./contacts/contacts.routes.js";
+import { documentsRouter } from "./documents/documents.routes.js";
 import { importRouter } from "./import/import.routes.js";
 
 // Builds the Express app: middleware + routes. No app.listen() here,
@@ -20,6 +21,7 @@ app.get("/health", (req, res) => {
 app.use("/applications", applicationsRouter);
 app.use("/", contactsRouter);
 app.use("/", importRouter);
+app.use("/", documentsRouter);
 
 // In production (Docker), also serve the built React board from web/dist, so one
 // server on one port runs everything. "/" returns index.html, which loads the JS and CSS.

@@ -36,3 +36,19 @@ CREATE TABLE IF NOT EXISTS contacts (
 
 -- Foreign keys aren't indexed automatically; this makes "contacts for application X" fast
 CREATE INDEX IF NOT EXISTS idx_contacts_application_id ON contacts(application_id);
+
+-- Documents: resumes and cover letters attached to an application.
+-- The files themselves live on disk in data/uploads/; this table only describes them.
+CREATE TABLE IF NOT EXISTS documents (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    application_id INTEGER NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+    kind           TEXT NOT NULL
+                     CHECK (kind IN ('resume', 'cover_letter', 'other')),
+    original_name  TEXT NOT NULL,          -- the uploader's filename, shown in the UI
+    stored_name    TEXT NOT NULL UNIQUE,   -- the random name the file is saved under on disk
+    mime_type      TEXT NOT NULL,
+    size_bytes     INTEGER NOT NULL CHECK (size_bytes >= 0),
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_documents_application_id ON documents(application_id);

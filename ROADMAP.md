@@ -32,13 +32,7 @@ A personal job application tracker, built to learn TypeScript, Node.js, React, D
 - See which resume version went to which company
 - **Done when:** every application shows its resume and cover letter
 
-## Stage 6: AI features via an MCP server (uses my Claude Pro plan, no API key)
-- The app itself stays AI-free. Instead, build an **MCP server** that exposes the tracker's API as tools for Claude: add, list, update, and get an application, and attach a document
-- **Paste a job description into Claude Code** and Claude extracts company, role, location, pay, deadline, and key skills, then calls the add-application tool
-- **Resume tuning:** a Claude Code custom command that reads a job from the tracker, tailors a copy of my base resume, explains every change, and attaches the result to that application. Never invent experience
-- **Done when:** "add this job to my tracker" in Claude Code creates a complete entry
-
-## Stage 7: Polish
+## Stage 6: Polish
 - Tests + GitHub Actions (tests run on every push)
 - Deploy it so it has a live link for my portfolio
 - Clean README with screenshots and a demo GIF

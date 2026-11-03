@@ -37,6 +37,8 @@ import { DocumentsSection } from './DocumentsSection'
 interface ApplicationDialogProps {
   // The application to edit, or null to add a new one
   application: Application | null
+  // Adding only: a company to start the form with (from a search with no results)
+  initialCompany?: string
   // When editing: the live contacts and documents from App's state (not the snapshot
   // inside `application`), so changes show up here and on the board at the same time
   contacts: Contact[]
@@ -74,6 +76,7 @@ interface DraftDocument {
 
 export function ApplicationDialog({
   application,
+  initialCompany,
   contacts,
   onContactsChange,
   documents,
@@ -85,7 +88,7 @@ export function ApplicationDialog({
   onDeleted,
 }: ApplicationDialogProps) {
   const isNew = application === null
-  const [values, setValues] = useState<FormValues>(() => initialValues(application))
+  const [values, setValues] = useState<FormValues>(() => initialValues(application, initialCompany))
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -347,11 +350,11 @@ export function Field({ label, error, children }: { label: string; error?: strin
   )
 }
 
-function initialValues(application: Application | null): FormValues {
+function initialValues(application: Application | null, initialCompany = ''): FormValues {
   if (application === null) {
     // New applications are usually added right after applying
     return {
-      company: '',
+      company: initialCompany,
       role: '',
       status: 'applied',
       date_applied: todayIso(),

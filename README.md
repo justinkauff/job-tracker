@@ -11,12 +11,15 @@ Built with **TypeScript, Node.js, Express, SQLite, React, and Docker**, one stag
 ## Features
 
 - **Status board.** Six columns (Wishlist, Applied, Interviewing, Offer, Rejected, Withdrawn). Drag a card to change its status; it saves immediately and rolls back if the save fails. Works with the keyboard too (Tab to a card, Space to pick up, arrows to move, Space to drop).
+- **Search.** Type part of a company, role, or contact's name and the board filters as you type, so you can see at a glance whether (and where) you've applied somewhere. Press `/` to jump to the search box and Esc to clear it. If nothing matches, one click adds it as a new application with the company filled in.
 - **Add an application in one step.** The Add form takes the job details plus, optionally, your resume, cover letter, and contacts; one Save creates them all. If a file or contact fails to save, the application is kept and reopened so you can retry just that part.
 - **Edit and delete applications** in a form that shows the server's validation messages next to the field they belong to.
 - **Contacts and referrals.** Track who you've reached out to and whether they've referred you. Cards show **✓ Referred by …**, or the contact's name and whether they've responded.
 - **Documents.** Attach the resume and cover letter (PDF or DOCX, up to 10 MB) you used for each application. PDFs open in the browser; DOCX files download.
 - **CSV import.** Load an exported spreadsheet. Messy rows (bad dates, unknown statuses, duplicates) are skipped with a reason, and the import can be re-run safely.
 - **Light and dark mode**, following your system setting.
+
+![Searching for "eng" shows the two matching applications in their columns](docs/screenshots/search.png)
 
 | Adding an application | Editing an application |
 |---|---|

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchApplications, updateApplication } from './api'
 import { ApplicationDialog } from './components/ApplicationDialog'
 import { Board } from './components/Board'
+import { matchesSearch } from './search'
 import type {
   Application,
   ApplicationDocument,
@@ -10,11 +11,12 @@ import type {
   Contact,
 } from './types'
 
-// What the dialog is showing: nothing, the "add" form, or the edit form for one application
-// (optionally with a notice at the top, e.g. "these files didn't upload")
+// What the dialog is showing: nothing, the "add" form (optionally with the company filled in,
+// e.g. from a search with no results), or the edit form for one application (optionally
+// with a notice at the top, e.g. "these files didn't upload")
 type DialogState =
   | { mode: 'closed' }
-  | { mode: 'add' }
+  | { mode: 'add'; company?: string }
   | { mode: 'edit'; application: Application; notice?: string }
 
 export default function App() {
@@ -24,6 +26,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [dialog, setDialog] = useState<DialogState>({ mode: 'closed' })
+  const [query, setQuery] = useState('')
+  const searchInput = useRef<HTMLInputElement>(null)
 
   // Runs after the first render. The empty [] means "only once", not on every re-render.
   useEffect(() => {
@@ -32,6 +36,27 @@ export default function App() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  // Pressing "/" anywhere on the board jumps to the search box (unless you're already
+  // typing in a field). The listener is added once, and the cleanup function removes it
+  // if App ever unmounts, so it isn't left behind.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement
+      const typing = target.closest('input, textarea, select, dialog') !== null
+      if (event.key === '/' && !typing) {
+        event.preventDefault() // don't type the "/" into the box
+        searchInput.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Derived data again: the board shows the matching applications, computed on every
+  // render from the full list. The full list itself never changes because of a search.
+  const visible = applications.filter((a) => matchesSearch(a, query))
+  const searching = query.trim() !== ''
 
   // Replace one application in the list. Uses the "updater" form of setApplications
   // (a function of the current list) so it always works on the latest state.
@@ -103,7 +128,46 @@ export default function App() {
     <main>
       <header className="header">
         <h1>Job Tracker</h1>
-        {!loading && !error && <span className="total">{applications.length} applications</span>}
+        {!loading && !error && (
+          <span className="total">
+            {searching ? `${visible.length} of ${applications.length}` : applications.length}{' '}
+            applications
+          </span>
+        )}
+
+        <div className="search">
+          <input
+            ref={searchInput}
+            type="search"
+            className="search-input"
+            placeholder="Search company, role, or contact  ( / )"
+            aria-label="Search applications"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              // Esc clears the search; a second Esc (when it's already empty) leaves the box
+              if (e.key === 'Escape') {
+                if (query) setQuery('')
+                else e.currentTarget.blur()
+              }
+            }}
+            disabled={loading || error !== null}
+          />
+          {query && (
+            <button
+              type="button"
+              className="search-clear"
+              aria-label="Clear search"
+              onClick={() => {
+                setQuery('')
+                searchInput.current?.focus()
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
         <button
           type="button"
           className="button-primary header-add"
@@ -125,12 +189,28 @@ export default function App() {
 
       {loading && <p>Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {!loading && !error && (
-        <Board
-          applications={applications}
-          onStatusChange={handleStatusChange}
-          onOpen={(application) => setDialog({ mode: 'edit', application })}
-        />
+      {!loading && !error && searching && visible.length === 0 ? (
+        // Nothing matches: say so, and offer to add it (the usual next step when you
+        // were checking whether you'd applied somewhere)
+        <div className="empty-search">
+          <p>No applications match “{query.trim()}”.</p>
+          <button
+            type="button"
+            className="button-primary"
+            onClick={() => setDialog({ mode: 'add', company: query.trim() })}
+          >
+            + Add “{query.trim()}” as a new application
+          </button>
+        </div>
+      ) : (
+        !loading &&
+        !error && (
+          <Board
+            applications={visible}
+            onStatusChange={handleStatusChange}
+            onOpen={(application) => setDialog({ mode: 'edit', application })}
+          />
+        )
       )}
 
       {/* Rendered only while open. The key gives each application its own fresh form,
@@ -139,6 +219,7 @@ export default function App() {
         <ApplicationDialog
           key={dialog.mode === 'edit' ? dialog.application.id : 'new'}
           application={dialog.mode === 'edit' ? dialog.application : null}
+          initialCompany={dialog.mode === 'add' ? dialog.company : undefined}
           contacts={editing?.contacts ?? []}
           onContactsChange={(contacts) => {
             if (editing) handleContactsChange(editing.id, contacts)

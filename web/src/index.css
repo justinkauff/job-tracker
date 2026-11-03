@@ -39,6 +39,7 @@ main {
 
 .header {
   display: flex;
+  flex-wrap: wrap; /* on a narrow window, the search box moves to its own line */
   align-items: baseline;
   gap: 12px;
   margin-bottom: 16px;
@@ -53,8 +54,61 @@ h1 {
   color: var(--muted);
 }
 
-.header-add {
+/* ---------- Search ---------- */
+
+/* Pushed to the right, next to "+ Add application" */
+.search {
+  position: relative;
   margin-left: auto;
+  width: min(360px, 100%);
+  align-self: center;
+}
+
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 30px 6px 10px; /* room on the right for the ✕ */
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.search-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Hide the browser's own clear button for type="search"; we draw our own ✕ */
+.search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.header-add {
+  align-self: center;
+}
+
+.empty-search {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-search p {
+  margin: 0 0 16px;
 }
 
 /* ---------- Buttons ---------- */

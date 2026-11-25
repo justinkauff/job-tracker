@@ -18,6 +18,8 @@ Built with **TypeScript, Node.js, Express, SQLite, React, and Docker**, one stag
 - **Documents.** Attach the resume and cover letter (PDF or DOCX, up to 10 MB) you used for each application. PDFs open in the browser; DOCX files download.
 - **CSV import.** Load an exported spreadsheet. Messy rows (bad dates, unknown statuses, duplicates) are skipped with a reason, and the import can be re-run safely.
 - **Light and dark mode**, following your system setting.
+- **Paste to add:** Paste a job posting's link or description, and the form fills in the job details for you to review before saving.
+- **Automated wishlist:** A scheduled Claude task searches for new postings twice a week, fills in location, work mode, and skills, and adds matches to the Wishlist through the API.
 
 ![Searching for "eng" shows the two matching applications in their columns](docs/screenshots/search.png)
 
